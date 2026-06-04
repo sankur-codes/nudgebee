@@ -10,6 +10,13 @@ jest.mock('@api1/ask-nudgebee', () => ({
     aiGenerateInvestigate: jest.fn(),
     getModelConfig: jest.fn(),
   },
+  // Hook constructs a fetcher per instance. Route fetcher.fetch() through the
+  // same `getLlmConversation` mock so tests can drive responses with the
+  // existing mockGetConversation.mockResolvedValue API.
+  createConversationFetcher: jest.fn(() => ({
+    fetch: jest.fn((args) => fetcherDelegate(args)),
+    reset: jest.fn(),
+  })),
 }));
 
 jest.mock('@api1/workflow', () => ({
@@ -19,8 +26,8 @@ jest.mock('@api1/workflow', () => ({
   },
 }));
 
-jest.mock('@components1/common/snackbarService', () => ({
-  snackbar: { success: jest.fn(), error: jest.fn() },
+jest.mock('@components1/ds/Toast', () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
 }));
 
 jest.mock('src/utils/common', () => ({
@@ -45,7 +52,11 @@ jest.mock('@lib/auth', () => ({
 jest.mock('uuid', () => ({ v4: jest.fn(() => 'test-session-id') }));
 
 import apiAskNudgebee from '@api1/ask-nudgebee';
-import { snackbar } from '@components1/common/snackbarService';
+import { toast as snackbar } from '@components1/ds/Toast';
+
+// The mock's createConversationFetcher closes over this delegate so tests can
+// drive the fetcher's responses by calling mockGetConversation.mockResolvedValue.
+const fetcherDelegate = (args) => apiAskNudgebee.getLlmConversation(args);
 
 const mockListModels = apiAskNudgebee.listModels;
 const mockGetConversation = apiAskNudgebee.getLlmConversation;
@@ -217,5 +228,41 @@ describe('useLLMInvestigationControl', () => {
     const model = { provider: 'anthropic', model: 'claude-3-5-sonnet' };
     act(() => result.current.setSelectedModel(model));
     expect(result.current.selectedModel).toEqual(model);
+  });
+
+  // Mutual-exclusivity: the wire format must never carry both blanket and
+  // tier picks at once. The reducer enforces this by clearing the other
+  // slot whenever one is written.
+  describe('blanket vs per-tier mutual exclusivity', () => {
+    it('setSelectedModel clears any previously-set tier picks', () => {
+      const { result } = renderHook(() => useLLMInvestigationControl('acc-1'));
+      const tierPicks = {
+        reasoning: { provider: 'googleai', model: 'gemini-2.5-pro' },
+        retrieval: { provider: 'openai', model: 'gpt-4o-mini' },
+      };
+      act(() => result.current.setSelectedTierModels(tierPicks));
+      expect(result.current.selectedTierModels).toEqual(tierPicks);
+      expect(result.current.selectedModel).toBeNull();
+
+      const blanket = { provider: 'anthropic', model: 'claude-opus-4-7' };
+      act(() => result.current.setSelectedModel(blanket));
+
+      expect(result.current.selectedModel).toEqual(blanket);
+      expect(result.current.selectedTierModels).toBeNull();
+    });
+
+    it('setSelectedTierModels clears any previously-set blanket model', () => {
+      const { result } = renderHook(() => useLLMInvestigationControl('acc-1'));
+      const blanket = { provider: 'anthropic', model: 'claude-opus-4-7' };
+      act(() => result.current.setSelectedModel(blanket));
+      expect(result.current.selectedModel).toEqual(blanket);
+      expect(result.current.selectedTierModels).toBeNull();
+
+      const tierPicks = { summary: { provider: 'openai', model: 'gpt-4o-mini' } };
+      act(() => result.current.setSelectedTierModels(tierPicks));
+
+      expect(result.current.selectedTierModels).toEqual(tierPicks);
+      expect(result.current.selectedModel).toBeNull();
+    });
   });
 });

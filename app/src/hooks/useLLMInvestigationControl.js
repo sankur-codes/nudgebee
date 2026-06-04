@@ -370,7 +370,10 @@ const initialState = {
   isLoading: false,
   availableModels: [],
   defaultModel: null,
+  // selectedModel and selectedTierModels are mutually exclusive — the
+  // reducer clears one when the other is set.
   selectedModel: null,
+  selectedTierModels: null,
   // Server-advertised image capability (from ai_list_models). Defaults to
   // disabled so the attach UI stays hidden until the backend confirms support.
   imageSupport: { enabled: false, maxPerMessage: 0, maxSizeMb: 0, allowedMimeTypes: [] },
@@ -394,7 +397,9 @@ function investigationReducer(state, action) {
     case 'SET_IS_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_SELECTED_MODEL':
-      return { ...state, selectedModel: action.payload };
+      return { ...state, selectedModel: action.payload, selectedTierModels: null };
+    case 'SET_SELECTED_TIER_MODELS':
+      return { ...state, selectedTierModels: action.payload, selectedModel: null };
     case 'SET_MODELS':
       return {
         ...state,
@@ -435,6 +440,7 @@ export const useLLMInvestigationControl = (accountId) => {
     availableModels,
     defaultModel,
     selectedModel,
+    selectedTierModels,
     imageSupport,
   } = state;
 
@@ -553,6 +559,11 @@ export const useLLMInvestigationControl = (accountId) => {
           llm_provider: selectedModel.provider,
           llm_model_name: selectedModel.model,
         }),
+        ...(!selectedModel &&
+          selectedTierModels &&
+          Object.keys(selectedTierModels).length > 0 && {
+            llm_tier_models: selectedTierModels,
+          }),
         ...(workflowId && { workflow_id: workflowId }),
         ...(!workflowId && workflowDefinition && { workflow_definition: workflowDefinition }),
         // Default the automation to the cluster/account the user is currently viewing so the
@@ -601,7 +612,7 @@ export const useLLMInvestigationControl = (accountId) => {
         onSuccess(sessionIdToUse);
       }
     },
-    [accountId, conversationIdAtDb, selectedModel]
+    [accountId, conversationIdAtDb, selectedModel, selectedTierModels]
   );
 
   const handleInvestigationGeneration = useCallback(
@@ -617,6 +628,10 @@ export const useLLMInvestigationControl = (accountId) => {
         requestPayload.config = {
           llm_provider: selectedModel.provider,
           llm_model_name: selectedModel.model,
+        };
+      } else if (selectedTierModels && Object.keys(selectedTierModels).length > 0) {
+        requestPayload.config = {
+          llm_tier_models: selectedTierModels,
         };
       }
 
@@ -646,7 +661,7 @@ export const useLLMInvestigationControl = (accountId) => {
         onSuccess(llmSessionId);
       }
     },
-    [accountId, selectedModel]
+    [accountId, selectedModel, selectedTierModels]
   );
 
   const startInvestigation = useCallback(
@@ -937,6 +952,8 @@ export const useLLMInvestigationControl = (accountId) => {
     defaultModel,
     selectedModel,
     setSelectedModel,
+    selectedTierModels,
+    setSelectedTierModels: (picks) => dispatch({ type: 'SET_SELECTED_TIER_MODELS', payload: picks }),
     imageSupport,
   };
 };
