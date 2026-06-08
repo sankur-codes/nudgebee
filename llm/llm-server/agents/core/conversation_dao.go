@@ -1131,8 +1131,8 @@ func (chat *ConversationDao) GetConversationBySession(accountID, sessionID strin
 	var source *ConversationSource
 	var cntxt sql.NullString
 	var llmProvider, llmModel *string
-	var tierOverrides ConversationTierOverrides
 	for rows.Next() {
+		var tierOverrides ConversationTierOverrides
 		if err := rows.Scan(&id, &userId, &sessionId, &accoundId, &cntxt, &status, &tenantId, &title, &source, &llmProvider, &llmModel, &tierOverrides); err != nil {
 			return Conversation{}, fmt.Errorf("history: failed to scan conversation: %w", err)
 		}
@@ -1190,8 +1190,8 @@ func (chat *ConversationDao) GetConversation(conversationId string) (Conversatio
 	var source *ConversationSource
 	var cntxt sql.NullString
 	var llmProvider, llmModel *string
-	var tierOverrides ConversationTierOverrides
 	for rows.Next() {
+		var tierOverrides ConversationTierOverrides
 		if err := rows.Scan(&id, &userId, &sessionId, &accoundId, &cntxt, &status, &tenantId, &title, &source, &llmProvider, &llmModel, &tierOverrides); err != nil {
 			return Conversation{}, fmt.Errorf("history: failed to scan conversation: %w", err)
 		}
