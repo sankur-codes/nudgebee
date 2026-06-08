@@ -1103,6 +1103,8 @@ actions:
         - name: X-ACTION-TOKEN
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
+      - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_admin
     comment: pprof profile
   - name: applications_list_profiles
@@ -1806,6 +1808,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: tenant_admin
+      - role: account_admin
   - name: event_update_nb_status
     definition:
       kind: synchronous
@@ -2591,6 +2594,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_admin
       - role: tenant_admin_readonly
       - role: tenant_usage
@@ -3293,6 +3297,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_admin
   - name: ticket_groupings_v2
     definition:
@@ -3402,6 +3407,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_usage
       - role: tenant_admin_readonly
       - role: tenant_admin
@@ -3415,6 +3421,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_usage
       - role: tenant_admin_readonly
       - role: tenant_admin
@@ -3492,6 +3499,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_usage
       - role: tenant_admin_readonly
       - role: tenant_admin
@@ -3505,6 +3513,7 @@ actions:
           value_from_env: ACTION_API_SERVER_TOKEN
     permissions:
       - role: account_admin
+      - role: account_admin_readonly
       - role: tenant_admin
       - role: tenant_admin_readonly
       - role: tenant_usage
@@ -4115,6 +4124,8 @@ actions:
     permissions:
       - role: tenant_admin_readonly
       - role: tenant_admin
+      - role: account_admin
+      - role: account_admin_readonly
       - role: k8s_namespace_admin_readonly
       - role: k8s_namespace_admin
   - name: workflow_list_executions_for_event

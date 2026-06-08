@@ -2316,6 +2316,12 @@ func UpdateEvent(ctx *security.RequestContext, request models.UpdateEventRequest
 		ctx.GetLogger().Error("services.UpdateEvent error getting events", "error", err)
 		return models.Event{}, err
 	}
+	if r.CloudAccountId == nil || *r.CloudAccountId == "" {
+		return models.Event{}, fmt.Errorf("event %s has no account association", request.EventId)
+	}
+	if !ctx.GetSecurityContext().HasAccountAccess(*r.CloudAccountId, security.SecurityAccessTypeUpdate) {
+		return models.Event{}, common.ErrorUnauthorized("access denied for account: " + *r.CloudAccountId)
+	}
 	if request.Urgency != "" {
 		r.Urgency = &request.Urgency
 	}
