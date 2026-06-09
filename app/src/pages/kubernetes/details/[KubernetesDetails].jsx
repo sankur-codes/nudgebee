@@ -123,6 +123,7 @@ import KubernetesClusterUpgradePlanner from '@components1/k8s/clusterUpgradePlan
 import QueryMetrics from '@components1/k8s/details/QueryMetrics';
 import KubernetesGroupedEventsTable from '@components1/k8s/details/groupedevents/KubernetesGroupedEventsTable';
 import SafeIcon from '@components1/common/SafeIcon';
+import { hasWriteAccess } from '@lib/auth';
 
 const GrafanaIframe = ({ accountId }) => {
   const iframeRef = useRef(null);
@@ -338,9 +339,12 @@ const KubernetesDetails = () => {
     const init = async () => {
       const grafana = selectedCluster?.agent?.connection_status?.grafanaEnabled || false;
       const isJaeger = selectedCluster?.cloud_provider === 'jaeger';
+      // Grafana embeds a full query/explore surface, so restrict it to users
+      // with write access on this cluster — read-only roles are blocked.
+      const canAccessGrafana = grafana && hasWriteAccess(kubeId);
       setTabOptions((prevOptions) =>
         prevOptions.map((option) => {
-          if (option.name === 'Grafana') return { ...option, disabled: !grafana };
+          if (option.name === 'Grafana') return { ...option, disabled: !canAccessGrafana };
           if (option.name === 'Monitoring') {
             return {
               ...option,
@@ -929,7 +933,7 @@ const KubernetesDetails = () => {
               {selectedSubTab == 6 && <KubernetesTracesGroupListing accountId={kubeId} />}
               {selectedSubTab == 7 && <KubernetesTracesCrossZoneListing accountId={kubeId} />}
               {selectedSubTab == 8 && <KubernetesSLOConfigs accountId={kubeId} />}
-              {selectedSubTab == 9 && <GrafanaIframe accountId={kubeId} />}
+              {selectedSubTab == 9 && hasWriteAccess(kubeId) && <GrafanaIframe accountId={kubeId} />}
             </>
           )}
           {[tabOptions[5].value].includes(selectedTab) && (
