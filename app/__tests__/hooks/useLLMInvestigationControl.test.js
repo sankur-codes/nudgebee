@@ -198,6 +198,74 @@ describe('useLLMInvestigationControl', () => {
     expect(result.current.conversationTitle).toBe('Test Chat');
   });
 
+  // Reconciling optimistic question placeholders against server-confirmed
+  // questions. The placeholder's created_at is a client clock value while the
+  // confirmed question's created_at is a server clock value, so they must not
+  // be compared directly — a browser clock running ahead of the server used to
+  // leave the placeholder behind as a duplicate question (the suggestion-click
+  // bug). Reconciliation is by occurrence count per text, immune to clock skew.
+  describe('optimistic question reconciliation', () => {
+    const confirmedConversation = (message, createdAt) => ({
+      data: {
+        data: {
+          llm_conversations: [
+            {
+              id: 'conv-1',
+              title: 'Chat',
+              status: 'IN_PROGRESS',
+              llm_conversation_messages: [{ id: 'm-1', message, created_at: createdAt, user: { display_name: 'Alice' } }],
+            },
+          ],
+        },
+        errors: [],
+      },
+    });
+
+    it('removes the optimistic placeholder even when the server timestamp predates the client one', async () => {
+      // Server confirms the question one minute BEFORE the client-stamped
+      // optimistic placeholder (browser clock ahead of server).
+      mockGetConversation.mockResolvedValue(confirmedConversation('Show me logs', '2026-06-09T05:29:00.000Z'));
+      const { result } = renderHook(() => useLLMInvestigationControl('acc-1'));
+
+      act(() => {
+        result.current.setMessages((prev) => [
+          ...prev,
+          { id: 'optimistic-1', text: 'Show me logs', type: 'question', isOptimistic: true, created_at: '2026-06-09T05:30:00.000Z' },
+        ]);
+      });
+
+      await act(async () => {
+        await result.current.fetchConversation('sess-1', null, 'poll', false);
+      });
+
+      const questions = result.current.messages.filter((m) => m.type === 'question' && m.text === 'Show me logs');
+      expect(questions).toHaveLength(1);
+      expect(result.current.messages.some((m) => m.isOptimistic)).toBe(false);
+    });
+
+    it('keeps the optimistic placeholder until its own confirmation arrives', async () => {
+      // Server has not yet persisted the new question — placeholder must remain.
+      mockGetConversation.mockResolvedValue({
+        data: { data: { llm_conversations: [{ id: 'conv-1', title: 'Chat', status: 'IN_PROGRESS', llm_conversation_messages: [] }] }, errors: [] },
+      });
+      const { result } = renderHook(() => useLLMInvestigationControl('acc-1'));
+
+      act(() => {
+        result.current.setMessages((prev) => [
+          ...prev,
+          { id: 'optimistic-1', text: 'Pending question', type: 'question', isOptimistic: true, created_at: '2026-06-09T05:30:00.000Z' },
+        ]);
+      });
+
+      await act(async () => {
+        await result.current.fetchConversation('sess-1', null, 'poll', false);
+      });
+
+      const pending = result.current.messages.filter((m) => m.isOptimistic && m.text === 'Pending question');
+      expect(pending).toHaveLength(1);
+    });
+  });
+
   it('checkConversationExists returns { exists: false } when sessionId is empty', async () => {
     const { result } = renderHook(() => useLLMInvestigationControl('acc-1'));
     let res;

@@ -856,19 +856,40 @@ export const useLLMInvestigationControl = (accountId) => {
             dispatch({
               type: 'SET_MESSAGES',
               payload: (prev) => {
-                const normalizeTs = (ts) => (ts && !ts.endsWith('Z') && !ts.includes('+') ? ts + 'Z' : ts);
-                const confirmedQuestions = allMessages
-                  .filter((m) => m.type === 'question')
-                  .map((q) => ({
-                    text: (q.text || '').trim(),
-                    time: new Date(normalizeTs(q.created_at)).getTime(),
-                  }));
+                // Retire optimistic question placeholders by COUNT per text, not by
+                // comparing timestamps. An optimistic message's created_at is stamped
+                // on the client, while the confirmed question's created_at comes from
+                // the server. The old `confirmed.time >= optimistic.time` guard left a
+                // duplicate question rendered at the bottom of the thread whenever the
+                // browser clock ran ahead of the server by more than the request
+                // latency (commonly seen after clicking a suggested follow-up). Counting
+                // confirmed occurrences per question text is immune to clock skew and
+                // still lets a re-asked (same-text) question keep its placeholder until
+                // its own confirmation arrives.
+                const norm = (t) => (t || '').trim();
+                const countConfirmed = (list) =>
+                  list.reduce((acc, m) => {
+                    if (m.type !== 'question' || m.isOptimistic) return acc;
+                    const k = norm(m.text);
+                    acc.set(k, (acc.get(k) || 0) + 1);
+                    return acc;
+                  }, new Map());
+                // confirmedNew - confirmedPrev = questions the server confirmed since the
+                // last render; each such confirmation retires one matching placeholder.
+                const confirmedNew = countConfirmed(allMessages);
+                const confirmedPrev = countConfirmed(prev);
+                const droppedSoFar = new Map();
 
                 const optimistic = prev.filter((m) => {
                   if (!m.isOptimistic) return false;
-                  const msgText = (m.text || '').trim();
-                  const msgTime = new Date(m.created_at).getTime();
-                  return !confirmedQuestions.some((c) => c.text === msgText && c.time >= msgTime);
+                  const k = norm(m.text);
+                  const newlyConfirmed = Math.max(0, (confirmedNew.get(k) || 0) - (confirmedPrev.get(k) || 0));
+                  const dropped = droppedSoFar.get(k) || 0;
+                  if (dropped < newlyConfirmed) {
+                    droppedSoFar.set(k, dropped + 1);
+                    return false; // a fresh server confirmation now covers this placeholder
+                  }
+                  return true; // still awaiting its own confirmation
                 });
                 return [...allMessages, ...optimistic];
               },
