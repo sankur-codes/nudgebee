@@ -167,7 +167,7 @@ export function DropdownMenu({
   refreshLabel = 'Refresh',
   headerActions,
   onClose,
-  disablePortal = true,
+  disablePortal = false,
 }: DropdownMenuProps) {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const [search, setSearch] = React.useState('');
