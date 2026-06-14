@@ -11,10 +11,13 @@ let _ssrBrandingLoaded = false;
 function loadSSRBrandingTokens(): Record<string, string> | null {
   if (typeof window !== 'undefined') return null;
   if (_ssrBrandingLoaded) return _ssrBrandingTokens;
-  _ssrBrandingLoaded = true;
 
   const filePath = process.env.TENANT_BRANDING_FILE;
-  if (!filePath) return null;
+  // No branding configured — cache the (permanent) miss and return defaults.
+  if (!filePath) {
+    _ssrBrandingLoaded = true;
+    return null;
+  }
 
   try {
     // Dynamic require to avoid bundling fs into client
@@ -25,8 +28,12 @@ function loadSSRBrandingTokens(): Record<string, string> | null {
     const raw = fs.readFileSync(resolvedPath, 'utf-8');
     const data = JSON.parse(raw);
     _ssrBrandingTokens = data?.colorTokens || null;
+    _ssrBrandingLoaded = true; // cache only a successful read
   } catch {
-    // Branding file not found or invalid — fall back to defaults
+    // Branding file configured but not readable yet (e.g. the branding volume not
+    // visible to this module's first caller). Do NOT cache — leave _ssrBrandingLoaded
+    // false so a later SSR render retries instead of latching defaults for the whole
+    // process lifetime (the color FOUC / bee-favicon flash). Falls back to defaults now.
   }
   return _ssrBrandingTokens;
 }
