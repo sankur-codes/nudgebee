@@ -1159,6 +1159,10 @@ const KubernetesEventsTable = ({
     selectedSource,
     isTroubleshootPage,
     accounts.length,
+    // accountType gates the cloud-only service-name / event-name query branch
+    // (resolves async K8s -> AWS/GCP/Azure after mount). Without it, a persisted
+    // service-name filter shows selected but never re-fetches once the type lands.
+    accountType,
     selectedServiceName,
     selectedEventName,
     selectedNbStatus,
