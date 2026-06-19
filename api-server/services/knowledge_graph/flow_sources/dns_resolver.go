@@ -182,9 +182,11 @@ func findMatchingZone(hostname string, zones []Route53HostedZone) *Route53Hosted
 	var bestMatch *Route53HostedZone
 	var bestMatchLen int
 
+	hostname = strings.ToLower(strings.TrimSuffix(hostname, "."))
+
 	for i := range zones {
-		zoneName := strings.TrimSuffix(zones[i].Name, ".")
-		if strings.HasSuffix(hostname, zoneName) && len(zoneName) > bestMatchLen {
+		zoneName := strings.ToLower(strings.TrimSuffix(zones[i].Name, "."))
+		if (hostname == zoneName || strings.HasSuffix(hostname, "."+zoneName)) && len(zoneName) > bestMatchLen {
 			bestMatch = &zones[i]
 			bestMatchLen = len(zoneName)
 		}
