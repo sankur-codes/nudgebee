@@ -175,10 +175,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -562,10 +559,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -945,10 +939,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1097,10 +1088,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1175,10 +1163,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1268,10 +1253,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		err = common.DecodeMapToStruct(actionRequestPayload, &request)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, buildApiResponse(nil, []error{
@@ -1354,10 +1336,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		err = common.DecodeMapToStruct(actionRequestPayload, &request)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, buildApiResponse(nil, []error{
@@ -1453,10 +1432,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1728,10 +1704,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1800,10 +1773,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			return
 		}
 
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1872,10 +1842,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 		}
 
 		var request ConversationGetApiRequest
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -1962,10 +1929,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			}))
 			return
 		}
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
@@ -2039,10 +2003,7 @@ func handleCompletionApis(r *gin.Engine, tracer trace.Tracer, meter metric.Meter
 			return
 		}
 
-		actionRequestPayload := actionRequest.Input
-		if actionRequestPayload["request"] != nil {
-			actionRequestPayload = actionRequestPayload["request"].(map[string]any)
-		}
+		actionRequestPayload := extractRequestMap(actionRequest.Input)
 		if actionRequestPayload == nil {
 			actionRequestPayload = requestMap
 		}
